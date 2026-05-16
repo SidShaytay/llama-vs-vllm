@@ -22,6 +22,9 @@ These are from May 16, 2026 UTC on AMD Strix Halo 128 GB with the Qwen3.6 35 bil
 > The answers to my original concerns are 
 > 1. For long worker sessions, it's actually very usable, even upto 8 individual agentic workloads!
 > 2. When setup properly, Llama.cpp is very good with overall throughout, model load times, both per-steam and overall aggregate throughput. The one place it's behind vLLM is on time to first token but its literally a negligible sub-half-second difference!
+> Personally these are all just tools but ...
+> ### Llama.cpp is the winner here 🏆
+> 
 
 Key findings from the `N = 1, 2, 4, 6, 8, 10, 12, 14, 16` run:
 
