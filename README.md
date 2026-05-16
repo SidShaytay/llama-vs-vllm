@@ -1,15 +1,17 @@
-# What is this
+# LLama.cpp vs vLLM: Local Agents Swarm Scaling
 
-This repo answers one practical question on an AMD Strix Halo 128 GB machine:
+This repo answers two practical questions on an AMD Strix Halo 128 GB machine:
 
-> How many concurrent local Qwen 3.6 35B A3B agent sessions can run before degradation ?
+> 1. How many concurrent local Qwen 3.6 35B A3B agent sessions can run before degradation ?
+>
+> 2. Is the simplicity of llama.cpp enough or do you really need to deal with vLLM?
 
 The default run compares vLLM vs Llama.cpp
 
 - `vllm-awq`: vLLM serving `cyankiwi/Qwen3.6-35B-A3B-AWQ-4bit`
 - `llamacpp-q4kxl`: llama.cpp `llama-server` serving Unsloth `Qwen3.6-35B-A3B-UD-Q4_K_XL.gguf`
 
-Those aren't *exact* model quants but close enough
+Those model quants aren't *exact* counterpart, but close enough in the 4.x bit/param zone.
 
 ## Performance Results
 
@@ -17,6 +19,9 @@ These are from May 16, 2026 UTC on AMD Strix Halo 128 GB with the Qwen3.6 35 bil
 
 > [!NOTE]
 > **Main surprise:** llama.cpp does better than expected compared to vLLM 🙂
+> The answers to my original concerns are 
+> 1. For long worker sessions, it's actually very usable, even upto 8 individual agentic workloads!
+> 2. When setup properly, Llama.cpp is very good with overall throughout, model load times, both per-steam and overall aggregate throughput. The one place it's behind vLLM is on time to first token but its literally a negligible sub-half-second difference!
 
 Key findings from the `N = 1, 2, 4, 6, 8, 10, 12, 14, 16` run:
 
