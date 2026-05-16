@@ -1,0 +1,30 @@
+{
+  "primary_concurrency": [1, 2, 4],
+  "overload_concurrency": [],
+  "min_samples": 3,
+  "max_samples": 3,
+  "warmup_duration_s": null,
+  "measure_duration_s": null,
+  "warmup_sessions": 0,
+  "session_turns": 2,
+  "think_time_ms": 0,
+  "request_timeout_s": 180,
+  "stop_on_saturation": false,
+  "traces": {
+    "tool_call": {
+      "weight": 0.7,
+      "prompt": [512, 1024],
+      "output": [24, 64]
+    },
+    "code_edit": {
+      "weight": 0.2,
+      "prompt": [1024, 2048],
+      "output": [64, 128]
+    },
+    "planning": {
+      "weight": 0.1,
+      "prompt": [512, 1024],
+      "output": [64, 128]
+    }
+  }
+}

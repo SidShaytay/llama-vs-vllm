@@ -1,0 +1,26 @@
+{
+  "primary_concurrency": [1],
+  "overload_concurrency": [],
+  "min_samples": 1,
+  "max_samples": 1,
+  "warmup_duration_s": null,
+  "measure_duration_s": null,
+  "warmup_sessions": 0,
+  "session_turns": 1,
+  "think_time_ms": 0,
+  "request_timeout_s": 2,
+  "runtimes": [
+    {
+      "name": "smoke-unreachable",
+      "endpoint": "http://127.0.0.1:9/v1",
+      "model": "unreachable"
+    }
+  ],
+  "traces": {
+    "tool_call": {
+      "weight": 1.0,
+      "prompt": [8, 12],
+      "output": [1, 2]
+    }
+  }
+}

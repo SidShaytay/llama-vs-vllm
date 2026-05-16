@@ -1,0 +1,49 @@
+{
+  "primary_concurrency": [1, 2, 4, 8, 16],
+  "overload_concurrency": [],
+  "warmup_duration_s": 3,
+  "measure_duration_s": 15,
+  "warmup_sessions": 0,
+  "session_turns": 6,
+  "think_time_ms": 0,
+  "request_timeout_s": 180,
+  "stop_on_saturation": false,
+  "traces": {
+    "tool_call": {
+      "weight": 0.7,
+      "prompt": [1024, 2048],
+      "output": [64, 192]
+    },
+    "code_edit": {
+      "weight": 0.2,
+      "prompt": [2048, 4096],
+      "output": [128, 384]
+    },
+    "planning": {
+      "weight": 0.1,
+      "prompt": [1024, 2048],
+      "output": [128, 384]
+    }
+  },
+  "runtimes": [
+    {
+      "name": "vllm-awq",
+      "endpoint": "http://localhost:8001/v1",
+      "model": "cyankiwi/Qwen3.6-35B-A3B-AWQ-4bit",
+      "command": ["./runtimes/vllm-awq.sh"],
+      "readiness_chat_timeout_s": 60,
+      "cleanup_patterns": [
+        "VLLM::EngineCore",
+        "vllm serve cyankiwi/Qwen3.6-35B-A3B-AWQ-4bit"
+      ]
+    },
+    {
+      "name": "llamacpp-q4kxl",
+      "endpoint": "http://localhost:18080/v1",
+      "model": "qwen3.6-35b-a3b",
+      "command": ["./runtimes/llamacpp-q4kxl.sh"],
+      "readiness_chat_timeout_s": 60,
+      "cleanup_patterns": ["llama-server --host 0.0.0.0 --port 18080"]
+    }
+  ]
+}
