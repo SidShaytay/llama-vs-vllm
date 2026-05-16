@@ -13,63 +13,79 @@ Those aren't *exact* model quants but close enough
 
 ## Performance Results
 
-These are from May 15, 2026 and for AMD Strix Halo 128 GB with the Qwen3.6 35 billion parameter, Mixture of Experts with 3B active params. They show how various performance metrics scale with additional agents. `N`: number of concurrent simulated agent workers.
+These are from May 16, 2026 UTC on AMD Strix Halo 128 GB with the Qwen3.6 35 billion parameter, Mixture of Experts with 3B active params. They show how various performance metrics scale with additional agents. `N`: number of concurrent simulated agent workers. Power profile was set to performance mode, with about 160 watts at the wall and GPU temperature around 65 C.
 
 > [!NOTE]
 > **Main surprise:** llama.cpp does better than expected compared to vLLM 🙂
 
+Key findings from the `N = 1, 2, 4, 6, 8, 10, 12, 14, 16` run:
+
+- Both stacks completed every tested concurrency level with 100% request success.
+- vLLM kept TTFT p95 flatter at high concurrency, ending at 3.09s at `N=16`.
+- llama.cpp delivered much higher per-stream generation throughput at every tested `N`, but its tail latency degraded harder by `N=16`.
+- llama.cpp aggregate throughput peaked around `N=10` at 51.61 output tok/s. vLLM aggregate throughput was noisier and peaked at 29.99 output tok/s at `N=10`.
+- The extra midpoints show llama.cpp does not suddenly fall off between `N=8` and `N=16`; the degradation is gradual, with a sharper ITL/tail-latency warning around `N=14+`.
+
 ### Time to first token scaling
 
-I was actually happy how llama.cpp scaled till 8 but something went wrong after that? `TTFT p95` is 95th percentile time to first streamed token. This is the main interactive latency metric.
+`TTFT p95` is 95th percentile time to first streamed token. This is the main interactive latency metric. vLLM has the better high-concurrency TTFT shape, while llama.cpp remains usable through `N=16` but with a larger tail.
 
-![TTFT p95 vs N](docs/benchmarks/2026-05-15_0102-default-n1-2-4-8-16/ttft-p95.svg)
+![TTFT p95 vs N](docs/benchmarks/2026-05-16_222800-full-n1-2-4-6-8-10-12-14-16/ttft-p95.svg)
 
 ### Aggregate Throughput Scaling
 
 How much total generation does the server produce as concurrency increases? `Agg gen tok/s` is generated output chunks/tokens divided by the measured wall-clock span for that concurrency level.
 
-![Aggregate generation throughput vs N](docs/benchmarks/2026-05-15_0102-default-n1-2-4-8-16/aggregate-gen-throughput.svg)
+![Aggregate generation throughput vs N](docs/benchmarks/2026-05-16_222800-full-n1-2-4-6-8-10-12-14-16/aggregate-gen-throughput.svg)
 
 ### Per-Agent Throughput Scaling
 
 As number of agents scale, how much does each agent get? `Gen tok/s` is generated output chunks/tokens divided by summed successful request duration. This is normalized by request duration, so it approximates per-stream throughput.
 
-![Generation throughput vs N](docs/benchmarks/2026-05-15_0102-default-n1-2-4-8-16/gen-throughput.svg)
+![Generation throughput vs N](docs/benchmarks/2026-05-16_222800-full-n1-2-4-6-8-10-12-14-16/gen-throughput.svg)
 
 ### Inter-token latency scaling
 
 `ITL p95`: 95th percentile inter-token latency between streamed output chunks after the first token.
 
-![ITL p95 vs N](docs/benchmarks/2026-05-15_0102-default-n1-2-4-8-16/itl-p95.svg)
+![ITL p95 vs N](docs/benchmarks/2026-05-16_222800-full-n1-2-4-6-8-10-12-14-16/itl-p95.svg)
 
 ### Memory Peak Scaling
 
 `Memory peak`: host memory used observed around requests from `/proc/meminfo`. Inference-server logs contain additional GPU memory details.
 
-![Memory peak vs N](docs/benchmarks/2026-05-15_0102-default-n1-2-4-8-16/memory-peak.svg)
+![Memory peak vs N](docs/benchmarks/2026-05-16_222800-full-n1-2-4-6-8-10-12-14-16/memory-peak.svg)
 
 ### Result Table
 
 | Inference stack | N | Requests | Success | TTFT p95 | ITL p95 | Gen tok/s/stream | Agg gen tok/s | Memory peak |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| `vllm-awq` | 1 | 2 | 100% | 0.950s | 0.057s | 16.990 | 16.988 | 60.59 GiB |
-| `vllm-awq` | 2 | 4 | 100% | 0.924s | 0.098s | 11.736 | 18.675 | 60.70 GiB |
-| `vllm-awq` | 4 | 4 | 100% | 2.104s | 0.140s | 7.105 | 18.834 | 61.09 GiB |
-| `vllm-awq` | 8 | 9 | 100% | 2.431s | 0.214s | 5.809 | 17.591 | 61.74 GiB |
-| `vllm-awq` | 16 | 17 | 100% | 2.706s | 0.274s | 4.043 | 25.687 | 61.82 GiB |
-| `llamacpp-q4kxl` | 1 | 5 | 100% | 1.294s | 0.021s | 31.602 | 31.586 | 45.48 GiB |
-| `llamacpp-q4kxl` | 2 | 5 | 100% | 1.622s | 0.028s | 26.386 | 47.622 | 47.47 GiB |
-| `llamacpp-q4kxl` | 4 | 7 | 100% | 2.558s | 0.041s | 17.150 | 44.650 | 50.10 GiB |
-| `llamacpp-q4kxl` | 8 | 12 | 100% | 3.327s | 0.067s | 10.957 | 34.895 | 53.29 GiB |
-| `llamacpp-q4kxl` | 16 | 19 | 100% | 8.247s | 0.165s | 5.535 | 35.831 | 53.47 GiB |
+| `vllm-awq` | 1 | 2 | 100% | 0.932s | 0.057s | 17.036 | 17.034 | 58.36 GiB |
+| `vllm-awq` | 2 | 4 | 100% | 0.931s | 0.100s | 11.744 | 18.677 | 58.39 GiB |
+| `vllm-awq` | 4 | 4 | 100% | 2.106s | 0.139s | 7.178 | 18.966 | 58.73 GiB |
+| `vllm-awq` | 6 | 6 | 100% | 1.521s | 0.178s | 6.527 | 20.949 | 59.41 GiB |
+| `vllm-awq` | 8 | 9 | 100% | 2.411s | 0.214s | 5.764 | 17.542 | 59.77 GiB |
+| `vllm-awq` | 10 | 11 | 100% | 1.639s | 0.221s | 4.925 | 29.994 | 59.71 GiB |
+| `vllm-awq` | 12 | 12 | 100% | 2.104s | 0.256s | 4.838 | 20.452 | 60.81 GiB |
+| `vllm-awq` | 14 | 14 | 100% | 2.659s | 0.265s | 4.408 | 20.072 | 60.48 GiB |
+| `vllm-awq` | 16 | 17 | 100% | 3.092s | 0.273s | 4.083 | 26.020 | 60.39 GiB |
+| `llamacpp-q4kxl` | 1 | 5 | 100% | 1.307s | 0.021s | 31.803 | 31.788 | 43.48 GiB |
+| `llamacpp-q4kxl` | 2 | 5 | 100% | 1.630s | 0.027s | 26.561 | 47.952 | 45.47 GiB |
+| `llamacpp-q4kxl` | 4 | 8 | 100% | 2.391s | 0.042s | 16.946 | 46.883 | 48.17 GiB |
+| `llamacpp-q4kxl` | 6 | 8 | 100% | 1.992s | 0.092s | 12.740 | 49.888 | 50.24 GiB |
+| `llamacpp-q4kxl` | 8 | 12 | 100% | 3.203s | 0.066s | 11.298 | 35.854 | 51.77 GiB |
+| `llamacpp-q4kxl` | 10 | 11 | 100% | 2.156s | 0.131s | 8.467 | 51.610 | 51.45 GiB |
+| `llamacpp-q4kxl` | 12 | 15 | 100% | 3.403s | 0.155s | 7.935 | 39.543 | 51.01 GiB |
+| `llamacpp-q4kxl` | 14 | 17 | 100% | 3.794s | 0.733s | 6.571 | 32.700 | 51.06 GiB |
+| `llamacpp-q4kxl` | 16 | 19 | 100% | 6.942s | 0.516s | 5.586 | 36.002 | 51.27 GiB |
 
 
 #### Setup
 
-- OS/kernel: Fedora 44 / Silverblue, kernel `7.0.4-200.fc44.x86_64`
+- OS/kernel: Fedora 44 / Silverblue, kernel `7.0.6-200.fc44.x86_64`
 - GPU: AMD Radeon 8060S Graphics / gfx1151
 - Model family: Qwen 3.6 35B A3B
-- Concurrency ramp: `N = 1, 2, 4, 8, 16`
+- Concurrency ramp: `N = 1, 2, 4, 6, 8, 10, 12, 14, 16`
 - Timing window per N: 3s warmup, then 15s measured; in-flight requests are allowed to finish. On the shorter side but sufficient for patterns to emerge.
 - Workload: real streamed chat completions, 6-turn simulated coding-agent sessions, temperature `0`
 - `vllm-awq`: vLLM `0.19.2rc1.dev113+g6aa057c9d.d20260422`, 16k max model length, 16 max sequences, fp8 KV cache, prefix caching, ROCm attention, Triton AWQ kernels
