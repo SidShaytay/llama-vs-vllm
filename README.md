@@ -15,7 +15,8 @@ Those aren't *exact* model quants but close enough
 
 These are from May 15, 2026 and for AMD Strix Halo 128 GB with the Qwen3.6 35 billion parameter, Mixture of Experts with 3B active params. They show how various performance metrics scale with additional agents. `N`: number of concurrent simulated agent workers.
 
-> Llama.cpp actually does better than expected compared to vLLM
+> [!NOTE]
+> **Main surprise:** llama.cpp does better than expected compared to vLLM 🙂
 
 ### Time to first token scaling
 
